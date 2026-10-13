@@ -235,69 +235,7 @@ button:disabled {
   filter: grayscale(1);
 }
 
-/* The Seat Grid */
-#grid {
-  display: grid;
-  grid-template-columns: repeat(20, 1fr);
-  gap: 3px;
-  width: 100%;
-  margin: 10px 0;
-  background: #000044;
-  padding: 8px;
-  border: 2px solid var(--dos-grey);
-}
-
-/* WOBBLY SEAT ANIMATION */
-#grid button {
-  padding: 0;
-  margin: 0;
-  height: 28px;
-  font-family: var(--font-dos);
-  font-size: 15px;
-  font-weight: bold;
-  border: 1px solid var(--dos-black);
-  background: #770000;
-  color: var(--dos-white);
-  border-radius: 2px;
-  transition: transform 0.1s;
-}
-
-#grid button:hover {
-  background: var(--dos-yellow);
-  color: var(--dos-black);
-  animation: wobbleSeat 0.4s infinite alternate ease-in-out;
-  z-index: 2;
-}
-
-@keyframes wobbleSeat {
-  0% { transform: rotate(-4deg) scale(1.05); }
-  50% { transform: rotate(4deg) scale(0.95); }
-  100% { transform: rotate(-3deg) scale(1.08); }
-}
-
-#grid button.sel {
-  background: var(--dos-bright-cyan);
-  color: var(--dos-black);
-  border: 2px solid var(--dos-white);
-  box-shadow: 0 0 6px var(--dos-bright-cyan);
-  animation: wobbleSeat 0.6s infinite alternate ease-in-out;
-}
-
-/* Screen indicator */
-.dos-screen-bar {
-  width: 90%;
-  background: var(--dos-white);
-  color: var(--dos-black);
-  font-family: var(--font-pixel);
-  font-size: 10px;
-  text-align: center;
-  padding: 4px;
-  margin-bottom: 8px;
-  letter-spacing: 2px;
-  border-bottom: 4px solid var(--dos-cyan);
-}
-
-/* Ring Toss Canvas */
+/* Canvas styling with DOS box outline */
 canvas {
   background: #000033;
   border: 3px solid var(--dos-yellow);
@@ -314,19 +252,19 @@ canvas {
   margin-top: 8px;
 }
 
-/* Whack a mole */
+/* Whack a mole in DOS */
 #holes {
-  display: flex;
-  gap: 14px;
-  flex-wrap: wrap;
-  justify-content: center;
-  margin: 16px 0;
+  display: grid;
+  grid-template-columns: repeat(3, 110px);
+  gap: 16px;
+  margin: 20px 0;
   --rise: .3s;
+  justify-content: center;
 }
 
 .hole {
-  width: 105px;
-  height: 105px;
+  width: 110px;
+  height: 110px;
   background: #000022;
   border-radius: 50% 50% 6px 6px;
   overflow: hidden;
@@ -338,8 +276,8 @@ canvas {
 }
 
 .mole {
-  width: 82px;
-  height: 82px;
+  width: 84px;
+  height: 84px;
   background: #884400;
   border-radius: 50% 50% 0 0;
   display: flex;
@@ -356,6 +294,7 @@ canvas {
   color: var(--dos-yellow);
   font-family: var(--font-pixel);
   padding: 3px 6px;
+  border-radius: 3px;
   font-size: 11px;
   border: 1px solid var(--dos-yellow);
 }
@@ -374,7 +313,7 @@ canvas {
 #hammer.sw { rotate: -60deg; }
 #whack { cursor: none; }
 
-/* Decision view */
+/* Decision Inspection view */
 #big {
   font-family: var(--font-pixel);
   font-size: 56px;
@@ -392,7 +331,7 @@ canvas {
   --p: 0%;
   background: linear-gradient(90deg, var(--dos-green) var(--p), var(--dos-grey) var(--p));
   touch-action: none;
-  min-width: 290px;
+  min-width: 280px;
   font-size: 11px;
 }
 
@@ -420,6 +359,7 @@ canvas {
   border: 2px solid var(--dos-bright-cyan);
   color: var(--dos-white);
   padding: 6px 10px;
+  border-radius: 4px;
   display: none;
   z-index: 20;
 }
@@ -493,9 +433,10 @@ td:last-child {
 }
 
 @media(max-width: 560px) {
-  #grid button { height: 20px; font-size: 10px; }
   h1 { font-size: 12px; }
   #big { font-size: 38px; }
+  #holes { grid-template-columns: repeat(2, 100px); }
+  .hole { width: 100px; height: 100px; }
 }
 </style>
 </head>
@@ -525,37 +466,26 @@ td:last-child {
   <div class="dos-content">
     <h1>🍿 CineChaos Box Office (DOS Edition)</h1>
     <div id="hud"></div>
-    <div id="clerk">🎟️ Clerk: Welcome! Pick your seat. How hard can it be?</div>
+    <div id="clerk">🎟️ Clerk: Welcome! Pick any seat you like. We just can't promise you'll get it.</div>
 
     <!-- The Popcorn Combo Modal -->
     <div id="ad">
       <div class="popcorn-box">
-        <div>🍿 POPCORN COMBO! 🍿<br><small>Your film begins after this message (<span id="cd" style="color:var(--dos-bright-cyan)">5</span>s)</small></div>
+        <div>🍿 POPCORN COMBO! 🍿<br><small>Your booking begins after this message (<span id="cd" style="color:var(--dos-bright-cyan)">5</span>s)</small></div>
         <button class="x" id="adx" disabled>✕</button>
       </div>
     </div>
 
-    <!-- Step 0: Grid Selection -->
-    <section class="s on" id="map0">
-      <div class="dos-screen-bar">═════════════ IMAX CURVED SCREEN THIS WAY ═════════════</div>
-      <p>Choose the seat you want. Row A–J, seats 1–20. (TARGET: F12)</p>
-      <div id="grid"></div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
-        <button id="lock" disabled>Lock in my seat</button>
-        <button id="skip" onclick="say('Nice try. No skipping in Turbo C.')">Skip to seat</button>
-      </div>
-    </section>
-
     <!-- Step 1: Ring Toss -->
     <section class="s" id="toss">
-      <p>Click to throw a ring. Seats drift, wind pushes, the platform changes mood.</p>
-      <canvas id="cv" width="640" height="460"></canvas>
+      <p>Hold mouse to charge ring, aim cursor, release to launch. Target: F12 (Seats A0–F12).</p>
+      <canvas id="cv" width="700" height="600"></canvas>
       <div id="rings">Rings left: 3</div>
     </section>
 
     <!-- Step 2: Whack A Mole -->
     <section class="s" id="whack">
-      <p>Whack a seat. The hammer is… a little late.</p>
+      <p>Every seat in your ring is hiding in these 6 holes. Whack the one you want.</p>
       <div id="holes"></div>
     </section>
 
@@ -565,7 +495,7 @@ td:last-child {
       <div id="big">F12</div>
       <button id="insp">🔍 Inspect label</button>
       <p id="q" style="color:var(--dos-white);margin-top:8px;"></p>
-      <div style="display:flex;flex-wrap:wrap;justify-content:center" id="btns">
+      <div style="display:flex;flex-wrap:wrap;justify-content:center">
         <button id="hold">Hold 5s to keep this seat (don't move!)</button>
         <button id="rej">Not my seat</button>
       </div>
@@ -590,95 +520,83 @@ td:last-child {
 <div id="hammer">🔨</div>
 
 <script>
-const $=id=>document.getElementById(id),R='ABCDEFGHIJ';
-const S={want:null,fails:0,thrown:0,whacks:0,insults:0,wasted:[],cur:null,final:false,t0:0,rejStep:0};
+const $=id=>document.getElementById(id),ROWS='ABCDEF';
+const S={fails:0,thrown:0,whacks:0,insults:0,wasted:[],cur:null,final:false,t0:Date.now(),rejStep:0};
 const sp=()=>Math.max(.4,1-.08*S.fails),rs=()=>Math.max(.45,1-.1*S.fails),ms=()=>Math.max(.5,1-.1*S.fails);
 const show=n=>document.querySelectorAll('.s').forEach(e=>e.classList.toggle('on',e.id==n));
 const say=t=>{$('clerk').textContent='🎟️ Clerk: '+t;S.insults++};
 const on=n=>$(n).classList.contains('on');
 
-/* ad */
+/* ad with a dodging close button */
 let c=5;const adt=setInterval(()=>{c--;$('cd').textContent=Math.max(c,0);if(c<=0){clearInterval(adt);$('adx').disabled=false;}},1000);
-$('adx').onmouseenter=()=>{if(!$('adx').disabled)return;};
-$('adx').onmouseover=function(){if(!this.dataset.n||this.dataset.n<4){this.dataset.n=+(this.dataset.n||0)+1;this.style.left=Math.random()*80+'%';this.style.top=Math.random()*80+'%';}};
-$('adx').onclick=()=>{$('ad').remove();S.t0=Date.now();};
+$('adx').onmouseover=function(){const n=+(this.dataset.n||0);if(n<4){this.dataset.n=n+1;this.style.left=Math.random()*80+'%';this.style.top=Math.random()*80+'%';}};
+$('adx').onclick=()=>{$('ad').remove();S.t0=Date.now();$('map').style.display='block';maps();startRound();};
 
-/* seat map */
-for(const r of R)for(let n=1;n<=20;n++){
-  const b=document.createElement('button');
-  b.textContent=r+n;
-  b.onclick=()=>{
-    S.want=r+n;
-    document.querySelectorAll('#grid .sel').forEach(x=>x.classList.remove('sel'));
-    b.classList.add('sel');
-    $('lock').disabled=false;
-  };
-  $('grid').appendChild(b);
-}
-$('lock').onclick=()=>{say('Manual selection only, please step onto the platform.');$('map').style.display='block';maps();startRound();};
+function maps(){$('map').innerHTML='Wasted seats: '+(S.wasted.map(s=>`<span title="${s}: you really thought so?">❌${s}</span>`).join('')||'none yet');}
+function hud(){$('hud').innerHTML=`<span>Round: ${S.fails+1}</span><span>Difficulty: TURBO 📈</span><span>Ring wear <span id="wear"><i style="width:${rs()*100}%"></i></span></span>`;}
 
-function decoys(id){const r=id[0],n=+id.slice(1),i=R.indexOf(r),o=[];
- [[i-1,n],[i+1,n],[i,n-1],[i,n+1]].forEach(([a,b])=>{if(a>=0&&a<10&&b>=1&&b<=20)o.push(R[a]+b)});
- const sw=+String(n).split('').reverse().join('');if(sw!=n&&sw>=1&&sw<=20)o.push(r+sw);return o;}
-function maps(){$('map').innerHTML='Target: ⭐ '+S.want+'<br>Wasted: '+(S.wasted.map(s=>`<span title="${s}">❌${s}</span>`).join('')||'none yet');}
-function hud(){$('hud').innerHTML=`<span>Round: ${S.fails+1}</span><span>Difficulty: TURBO 📈</span><span>Ring wear: <span id="wear"><i style="width:${rs()*100}%"></i></span></span>`;}
-
-/* ring toss */
+/* ring toss: all 78 seats (A0-F12) on a multi-layer rotating platform */
 const cv=$('cv'),g=cv.getContext('2d');
-let seats=[],ang=0,dir=1,mult=1,ring=null,lock=false,flash='',rings=3,mx=0,my=0,lastMove=0;
+const CX=350,CY=265,LX=350,LY=575;
+const LAY=[[45,6],[95,12],[145,16],[195,20],[235,24]],LM=[1,-.8,.6,-.5,.4];
+let seats=[],ang=0,dir=1,mult=1,ring=null,lock=false,flash='',rings=3,mx=LX,my=0,charging=null,power=0;
 function startRound(){
- rings=3;const set=new Set([S.want,...decoys(S.want)]);
- while(set.size<14)set.add(R[Math.random()*10|0]+(1+Math.random()*20|0));
- const a=[...set].sort(()=>Math.random()-.5);
- seats=a.map((id,i)=>({id,a:i/a.length*6.283,r:70+Math.random()*100}));
+ rings=3;const ids=[];for(const r of ROWS)for(let n=0;n<=12;n++)ids.push(r+n);
+ ids.sort(()=>Math.random()-.5);seats=[];let k=0;
+ LAY.forEach(([rad,cnt],L)=>{for(let i=0;i<cnt;i++)seats.push({id:ids[k++],L,a:i/cnt*6.283});});
  hud();show('toss');lock=false;ring=null;flash='';$('rings').textContent='Rings left: 3';
 }
 setInterval(()=>{dir=Math.random()<.5?-1:1;mult=.6+Math.random()*.8;},4000);
-const pos=(e)=>{const b=cv.getBoundingClientRect();return{x:(e.clientX-b.left)*640/b.width,y:(e.clientY-b.top)*460/b.height}};
-const sxy=s=>({x:320+s.r*Math.cos(s.a+ang),y:230+s.r*Math.sin(s.a+ang)});
-const ringR=()=>60*rs();
-cv.onmousemove=e=>{const p=pos(e);mx=p.x;my=p.y;};
-cv.onclick=e=>{
- if(lock||ring)return;const p=pos(e);S.thrown++;
- const i=Math.random()*seats.length|0,j=Math.random()*seats.length|0;[seats[i].a,seats[j].a]=[seats[j].a,seats[i].a];
- const w=(Math.random()-.5)*90;
- ring={x:p.x+w+(Math.random()-.5)*16,y:p.y+(Math.random()-.5)*40,t:0};
+const pos=e=>{const b=cv.getBoundingClientRect();return{x:(e.clientX-b.left)*700/b.width,y:(e.clientY-b.top)*600/b.height}};
+const sxy=s=>{const a=s.a+ang*LM[s.L];return{x:CX+LAY[s.L][0]*Math.cos(a),y:CY+LAY[s.L][0]*Math.sin(a)}};
+const ringR=()=>62*rs();
+cv.onpointermove=e=>{const p=pos(e);mx=p.x;my=p.y;};
+cv.onpointerdown=e=>{if(lock||ring)return;const p=pos(e);mx=p.x;my=p.y;cv.setPointerCapture(e.pointerId);charging=performance.now();};
+cv.onpointerup=e=>{if(!charging)return;charging=null;fire();};
+cv.onpointercancel=()=>{charging=null;};
+function fire(){
+ S.thrown++;
+ const i=Math.random()*seats.length|0,j=Math.random()*seats.length|0;
+ [seats[i].a,seats[j].a]=[seats[j].a,seats[i].a];[seats[i].L,seats[j].L]=[seats[j].L,seats[i].L];
+ let dx=mx-LX,dy=my-LY;const d=Math.hypot(dx,dy)||1;dx/=d;dy/=d;
+ const w=(Math.random()-.5)*90,dist=Math.max(.08,power)*560;
+ ring={sx:LX,sy:LY,tx:LX+dx*dist+w+(Math.random()-.5)*14,ty:LY+dy*dist+(Math.random()-.5)*14,t:0};
  flash='Wind pushed '+(w>0?'→':'←')+' '+Math.abs(w|0);
-};
+}
 function resolve(){
- const ws=seats.find(s=>s.id==S.want),wp=sxy(ws),k=Math.min(.5,.07*S.fails);
- ring.x+=(wp.x-ring.x)*k;ring.y+=(wp.y-ring.y)*k;
- const hit=seats.filter(s=>{const q=sxy(s);return Math.hypot(q.x-ring.x,q.y-ring.y)<ringR()}).map(s=>s.id);
+ const hit=seats.filter(s=>{const q=sxy(s);return Math.hypot(q.x-ring.tx,q.y-ring.ty)<ringR()}).map(s=>s.id);
  ring=null;
- if(hit.length){startWhack(hit.slice(0,6));return;}
+ if(hit.length){startWhack(hit);return;}
  rings--;
  if(rings<=0){lock=true;say('Restocking rings… please enjoy 4 seconds of silence.');$('rings').textContent='Restocking…';setTimeout(()=>{rings=3;lock=false;$('rings').textContent='Rings left: 3';},4000);}
  else{say('You rang nothing. Bold strategy.');$('rings').textContent='Rings left: '+rings;}
 }
 
-/* whack */
-let holes=[],cool=0,hx=0,hy=0,tx=0,ty=0,mirror=false;
-document.addEventListener('pointermove',e=>{tx=e.clientX;ty=e.clientY;mx2=e.clientX;lastMove=Date.now();});let mx2=0;
+/* whack-a-mole: 6 holes, ringed seats appear in random holes */
+let holes=[],caught=[],closedId=null,cool=0,hx=0,hy=0,tx=0,ty=0,mirror=false;
+document.addEventListener('pointermove',e=>{tx=e.clientX;ty=e.clientY;});
 function startWhack(list){
+ caught=list;closedId=list.length>2?list[Math.random()*list.length|0]:null;
  const box=$('holes');box.innerHTML='';box.style.setProperty('--rise',(.35/ms()).toFixed(2)+'s');
- const cid=list.length>2?list.find(s=>s!=S.want):null;
- holes=list.map(id=>{const h=document.createElement('div');h.className='hole';h.innerHTML=`<div class="mole${id==cid?' closed':''}"><b>${id}</b></div>`;box.appendChild(h);return{id,el:h.firstChild,closed:id==cid,up:false};});
+ holes=[];for(let i=0;i<6;i++){const h=document.createElement('div');h.className='hole';h.innerHTML='<div class="mole"><b></b></div>';box.appendChild(h);holes.push({el:h.firstChild,id:null,up:false});}
  show('whack');cool=0;$('hammer').style.display='block';
- if(S.fails>=4)say('The moles are tired. It has been a long day in DOS.');
+ say(S.fails>=3?'The moles are tired. It has been a long day in DOS.':`${list.length} seat${list.length>1?'s':''} in your ring. Good luck.`);
 }
 setInterval(()=>{if(!on('whack'))return;
- holes.forEach(h=>{if(h.up||Math.random()>.3)return;
-  if(h.id==S.want&&Date.now()-lastMove<500)return;
-  h.up=true;h.el.classList.add('up');setTimeout(()=>{h.up=false;h.el.classList.remove('up');},1400/ms());});
+ holes.forEach(h=>{if(h.up||Math.random()>.35)return;
+  const free=caught.filter(id=>!holes.some(x=>x.id==id));if(!free.length)return;
+  const id=free[Math.random()*free.length|0];
+  h.id=id;h.up=true;h.el.querySelector('b').textContent=id;h.el.classList.toggle('closed',id==closedId);h.el.classList.add('up');
+  setTimeout(()=>{h.up=false;h.el.classList.remove('up');setTimeout(()=>{if(!h.up)h.id=null;},400);},1500/ms());});
 },350);
 setInterval(()=>{if(!on('whack'))return;mirror=true;say('The hammer is left-handed for a bit.');setTimeout(()=>mirror=false,5000);},16000);
-document.addEventListener('pointerdown',e=>{
+document.addEventListener('pointerdown',()=>{
  if(!on('whack'))return;const now=Date.now();
  if(now<cool){cool=now+1500;say('Hammer is recovering. Swinging early resets it.');return;}
  cool=now+1500;$('hammer').classList.add('sw');setTimeout(()=>$('hammer').classList.remove('sw'),180);
  for(const h of holes){if(!h.up)continue;const r=h.el.getBoundingClientRect();
   if(hx>r.left&&hx<r.right&&hy>r.top&&hy<r.bottom+20){
-   if(h.closed){say('That mole is closed. It felt nothing.');return;}
+   if(h.id==closedId){say('That mole is closed. It felt nothing.');return;}
    S.whacks++;document.body.classList.add('shake');setTimeout(()=>document.body.classList.remove('shake'),300);
    $('hammer').style.display='none';pick(h.id);return;}}
 });
@@ -687,18 +605,25 @@ document.addEventListener('pointerdown',e=>{
 let last=0;
 function loop(t){const dt=Math.min(.05,(t-last)/1000);last=t;
  if(on('toss')){
-  ang+=.6*sp()*dir*mult*dt;g.clearRect(0,0,640,460);
-  g.fillStyle='#000044';g.beginPath();g.arc(320,230,195,0,7);g.fill();g.strokeStyle='#ffff55';g.lineWidth=3;g.stroke();
+  ang+=.6*sp()*dir*mult*dt;g.clearRect(0,0,700,600);
+  g.fillStyle='#000033';g.beginPath();g.arc(CX,CY,258,0,7);g.fill();g.strokeStyle='#ffff55';g.lineWidth=3;g.stroke();
+  g.font='14px "VT323", monospace';g.textAlign='center';
   seats.forEach(s=>{const q=sxy(s);
-   if(s.id==S.want&&S.fails>=3){g.shadowColor='#55ffff';g.shadowBlur=14;}
-   g.fillStyle='#aa0000';g.fillRect(q.x-14,q.y-12,28,24);g.strokeStyle='#ffffff';g.strokeRect(q.x-14,q.y-12,28,24);g.shadowBlur=0;
-   g.fillStyle='#ffff55';g.font='14px "VT323", monospace';g.textAlign='center';g.fillText(s.id,q.x,q.y+4);});
-  if(!ring){g.setLineDash([5,5]);g.strokeStyle='#55ffff';g.beginPath();g.arc(mx,my,ringR(),0,7);g.stroke();g.setLineDash([]);}
-  else{ring.t+=dt*2.5;const k=Math.min(1,ring.t);g.strokeStyle='#ffff55';g.lineWidth=5;g.beginPath();g.arc(ring.x,ring.y,ringR()*(1+1.5*(1-k)),0,7);g.stroke();if(ring.t>=1.2)resolve();}
+   if(s.id==='F12'){g.fillStyle='#ffff55';g.fillRect(q.x-13,q.y-10,26,20);g.fillStyle='#000000';g.fillText(s.id,q.x,q.y+4);return;}
+   g.fillStyle='#aa0000';g.fillRect(q.x-11,q.y-8,22,16);g.strokeStyle='#ffffff';g.strokeRect(q.x-11,q.y-8,22,16);
+   g.fillStyle='#ffffff';g.fillText(s.id,q.x,q.y+4);});
+  g.fillStyle='#55ffff';g.fillRect(LX-14,LY-4,28,18);
+  if(charging){power=.5-.5*Math.cos((performance.now()-charging)/260);
+   const d=Math.hypot(mx-LX,my-LY)||1;g.strokeStyle='#55ffffaa';g.lineWidth=2;g.beginPath();g.moveTo(LX,LY);g.lineTo(LX+(mx-LX)/d*45,LY+(my-LY)/d*45);g.stroke();
+   g.strokeStyle='#ffff55';g.strokeRect(20,570,160,14);g.fillStyle='#55ff55';g.fillRect(20,570,160*power,14);}
+  if(ring){ring.t+=dt*1.2;const k=Math.min(1,ring.t),e=1-(1-k)*(1-k);
+   const x=ring.sx+(ring.tx-ring.sx)*e,y=ring.sy+(ring.ty-ring.sy)*e;
+   g.strokeStyle='#ffff55';g.lineWidth=5;g.beginPath();g.arc(x,y,ringR()*(1+.8*(1-k)),0,7);g.stroke();
+   if(ring.t>=1.3)resolve();}
   g.fillStyle='#ffff55';g.font='18px "VT323", monospace';g.textAlign='left';g.fillText(flash,14,24);
  }
  if(on('whack')){
-  const targx=mirror?innerWidth-tx:tx;hx+=(targx-hx)*.1;hy+=(ty-hy)*.1;
+  hx+=((mirror?innerWidth-tx:tx)-hx)*.1;hy+=(ty-hy)*.1;
   const h=$('hammer');h.style.left=hx+'px';h.style.top=hy+'px';h.style.opacity=Date.now()<cool?.45:1;
  }
  requestAnimationFrame(loop);}
@@ -709,15 +634,14 @@ function pick(id){
  S.cur=id;S.rejStep=0;$('big').textContent=id;$('big').classList.remove('clear');
  $('q').textContent=S.final?'Payment gateway timed out. Please hold to reconfirm.':`Are you sure you don't want to not keep seat ${id}?`;
  $('rej').style.display=S.final?'none':'';$('rej').textContent='Not my seat';
- if(S.fails>=3&&id!=S.want)say('Just take this one instead? Honestly it is lovely.');
  show('dec');
 }
 $('insp').onclick=()=>{$('big').classList.add('clear');setTimeout(()=>$('big').classList.remove('clear'),1500);};
-setInterval(()=>{if(on('dec')){const f=$('hold').style.order;$('hold').style.order=f=='1'?'0':'1';}},2500);
+setInterval(()=>{if(on('dec'))$('hold').style.order=$('hold').style.order=='1'?'0':'1';},2500);
 $('rej').onclick=()=>{
  if(S.rejStep==0){S.rejStep=1;say(`Are you sure? ${S.cur} has MUCH better legroom.`);$('rej').textContent='Yes, really reject it';return;}
- if(S.cur!=S.want||true)S.wasted.push(S.cur);S.fails++;maps();
- const ex=['The platform motor is overheating, so it runs slower.','We washed the rings in hot water. They shrank.','The moles are tired. It has been a long day.'];
+ S.wasted.push(S.cur);S.fails++;maps();
+ const ex=['The platform motor is overheating, so it runs slower.','We washed the rings in hot water. They shrank.','The moles are tired. It has been a long day in DOS.'];
  say(S.fails>=5?'We will get there. Eventually. 💗':ex[(S.fails-1)%3]);
  startRound();
 };
@@ -726,19 +650,14 @@ hb.onpointerdown=e=>{hs=performance.now();hx0=e.clientX;hy0=e.clientY;hb.setPoin
 hb.onpointermove=e=>{if(hs&&Math.hypot(e.clientX-hx0,e.clientY-hy0)>3){hs=performance.now();hx0=e.clientX;hy0=e.clientY;}};
 hb.onpointerup=hb.onpointercancel=()=>{hs=0;hb.style.setProperty('--p','0%');};
 function hold(){if(!hs)return;const p=(performance.now()-hs)/5000;hb.style.setProperty('--p',Math.min(p,1)*100+'%');
- if(p>=1){hs=0;hb.style.setProperty('--p','0%');decided();}else requestAnimationFrame(hold);}
+ if(p>=1){hs=0;hb.style.setProperty('--p','0%');S.final?finish():fake();}else requestAnimationFrame(hold);}
 
-function decided(){
- if(S.final)return finish();
- if(S.cur!=S.want){say('Settling for '+S.cur+'? We respect that, sort of.');return finish();}
- fake();
-}
 function fake(){
  show('end');$('et').textContent='Processing your booking…';const b=$('eb');b.style.transition='none';b.style.width='0';
  setTimeout(()=>{b.style.transition='width 3s';b.style.width='99%';},50);
  setTimeout(()=>$('et').textContent='🎉 Booking successful!',6000);
  setTimeout(()=>{$('et').textContent='Payment gateway timeout. Please reconfirm your seat.';},8200);
- setTimeout(()=>{S.final=true;pick(S.want);},10500);
+ setTimeout(()=>{S.final=true;pick(S.cur);},10500);
 }
 function finish(){
  show('fin');$('map').style.display='none';
