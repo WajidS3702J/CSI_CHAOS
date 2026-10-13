@@ -456,6 +456,79 @@ td:last-child {
   font-weight: bold;
 }
 
+/* === RETRO DOS AD CLUTTER === */
+.clutter-ad-left, .clutter-ad-right {
+  position: fixed;
+  top: 90px;
+  width: 175px;
+  background: #000033;
+  border: 3px outset var(--dos-yellow);
+  padding: 8px;
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  text-align: center;
+  z-index: 80;
+  box-shadow: 4px 4px 0 #000;
+}
+.clutter-ad-left { left: 10px; }
+.clutter-ad-right { right: 10px; }
+
+.ad-title {
+  background: var(--dos-red);
+  color: var(--dos-white);
+  padding: 3px;
+  margin-bottom: 6px;
+  animation: blink 0.8s infinite;
+  font-weight: bold;
+}
+
+.ad-blink-btn {
+  background: var(--dos-green);
+  color: #000;
+  border: 2px outset #fff;
+  padding: 4px;
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  margin-top: 6px;
+  cursor: pointer;
+  display: block;
+  width: 100%;
+}
+.ad-blink-btn:hover {
+  background: var(--dos-yellow);
+}
+
+.clutter-ticker {
+  width: 100%;
+  background: var(--dos-red);
+  color: var(--dos-yellow);
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  padding: 4px 0;
+  overflow: hidden;
+  white-space: nowrap;
+  border-bottom: 2px solid var(--dos-yellow);
+  z-index: 10;
+}
+.clutter-ticker-inner {
+  display: inline-block;
+  animation: marquee 16s linear infinite;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(100vw); }
+  100% { transform: translateX(-100%); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+
+@media(max-width: 950px) {
+  .clutter-ad-left, .clutter-ad-right { display: none; }
+}
+
 @media(max-width: 560px) {
   h1 { font-size: 12px; }
   #big { font-size: 38px; }
@@ -465,6 +538,29 @@ td:last-child {
 </style>
 </head>
 <body>
+
+<!-- Retro Clutter Marquee Ticker -->
+<div class="clutter-ticker">
+  <div class="clutter-ticker-inner">
+    🚨 WARNING: BUTTER SHORTAGE IN ROW D | SEAT F12 HAS A 94% CHANCE OF EXISTENTIAL CRISIS | CLICK TO CLAIM FREE 3D GLASSES (BATTERIES NOT INCLUDED) | CONVENIENCE TAX: ₹4,999 🚨
+  </div>
+</div>
+
+<!-- Left Floater Ad -->
+<div class="clutter-ad-left">
+  <div class="ad-title">🔥 HOT DEAL! 🔥</div>
+  <p style="color:var(--dos-bright-cyan);margin:4px 0;">WIN FREE COLD SOGGY NACHOS!</p>
+  <button class="ad-blink-btn" onclick="say('Error 404: Nachos eaten by projector operator.')">CLAIM NOW</button>
+  <small style="font-size:7px;color:#888;display:block;margin-top:4px;">*Requires kidney deposit</small>
+</div>
+
+<!-- Right Floater Ad -->
+<div class="clutter-ad-right">
+  <div class="ad-title" style="background:#cc0088;">⚠️ WINNER #999! ⚠️</div>
+  <p style="color:var(--dos-yellow);margin:4px 0;">UPGRADE TO CINE-DEFENDER 95!</p>
+  <button class="ad-blink-btn" style="background:#55ffff;" onclick="say('Download failed. Cine-Defender is asleep.')">INSTALL 💾</button>
+  <small style="font-size:7px;color:#888;display:block;margin-top:4px;">*Speed: 14.4kbps</small>
+</div>
 
 <!-- DOS Top Menu Bar -->
 <div class="dos-menubar">
