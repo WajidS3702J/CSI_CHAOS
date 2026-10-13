@@ -252,6 +252,30 @@ canvas {
   margin-top: 8px;
 }
 
+/* Spotlight controls bar */
+.spotlight-bar {
+  font-family: var(--font-dos);
+  font-size: 19px;
+  color: var(--dos-white);
+  margin: 8px 0 4px;
+  text-align: center;
+  background: #000044;
+  padding: 6px 12px;
+  border: 2px solid var(--dos-grey);
+  width: 100%;
+}
+#spot {
+  font-family: var(--font-pixel);
+  font-size: 11px;
+  background: var(--dos-black);
+  color: var(--dos-yellow);
+  border: 2px solid var(--dos-white);
+  padding: 4px 8px;
+  width: 80px;
+  text-transform: uppercase;
+  outline: none;
+}
+
 /* Whack a mole in DOS */
 #holes {
   display: grid;
@@ -481,6 +505,12 @@ td:last-child {
       <p>Hold mouse to charge ring, aim cursor, release to launch. Target: F12 (Seats A0–F12).</p>
       <canvas id="cv" width="700" height="600"></canvas>
       <div id="rings">Rings left: 3</div>
+      <div class="spotlight-bar">
+        Row colors:
+        <b style="color:#e0707e">A</b> <b style="color:#e8963f">B</b> <b style="color:#cdb93a">C</b> <b style="color:#5fc98a">D</b> <b style="color:#5aaee0">E</b> <b style="color:#b48ae6">F</b>
+        &nbsp;|&nbsp; Hover seat to zoom. Spotlight:
+        <input id="spot" maxlength="3" placeholder="F12">
+      </div>
     </section>
 
     <!-- Step 2: Whack A Mole -->
@@ -538,6 +568,7 @@ function hud(){$('hud').innerHTML=`<span>Round: ${S.fails+1}</span><span>Difficu
 /* ring toss: all 78 seats (A0-F12) on a multi-layer rotating platform */
 const cv=$('cv'),g=cv.getContext('2d');
 const CX=350,CY=265,LX=350,LY=575;
+const RC=['#b03a48','#c06a1d','#8a7a12','#2f8a52','#2a79a8','#7a4fb0'];let spot='';
 const LAY=[[45,6],[95,12],[145,16],[195,20],[235,24]],LM=[1,-.8,.6,-.5,.4];
 let seats=[],ang=0,dir=1,mult=1,ring=null,lock=false,flash='',rings=3,mx=LX,my=0,charging=null,power=0;
 function startRound(){
@@ -601,6 +632,9 @@ document.addEventListener('pointerdown',()=>{
    $('hammer').style.display='none';pick(h.id);return;}}
 });
 
+$('spot').style.userSelect='text';$('spot').style.webkitUserSelect='text';
+$('spot').oninput=e=>{spot=e.target.value.toUpperCase().trim();};
+
 /* frame loop */
 let last=0;
 function loop(t){const dt=Math.min(.05,(t-last)/1000);last=t;
@@ -608,10 +642,13 @@ function loop(t){const dt=Math.min(.05,(t-last)/1000);last=t;
   ang+=.6*sp()*dir*mult*dt;g.clearRect(0,0,700,600);
   g.fillStyle='#000033';g.beginPath();g.arc(CX,CY,258,0,7);g.fill();g.strokeStyle='#ffff55';g.lineWidth=3;g.stroke();
   g.font='14px "VT323", monospace';g.textAlign='center';
-  seats.forEach(s=>{const q=sxy(s);
-   if(s.id==='F12'){g.fillStyle='#ffff55';g.fillRect(q.x-13,q.y-10,26,20);g.fillStyle='#000000';g.fillText(s.id,q.x,q.y+4);return;}
-   g.fillStyle='#aa0000';g.fillRect(q.x-11,q.y-8,22,16);g.strokeStyle='#ffffff';g.strokeRect(q.x-11,q.y-8,22,16);
+  let near=null,nd=26;
+  seats.forEach(s=>{const q=sxy(s);s.q=q;const d=Math.hypot(q.x-mx,q.y-my);if(d<nd){nd=d;near=s;}
+   g.fillStyle=RC[ROWS.indexOf(s.id[0])];g.fillRect(q.x-15,q.y-10,30,20);
+   g.strokeStyle='#ffffff88';g.lineWidth=1;g.strokeRect(q.x-15,q.y-10,30,20);
    g.fillStyle='#ffffff';g.fillText(s.id,q.x,q.y+4);});
+  if(spot){const s=seats.find(x=>x.id==spot);if(s){const p=8+6*Math.sin(performance.now()/150);g.strokeStyle='#ffff55';g.lineWidth=4;g.beginPath();g.arc(s.q.x,s.q.y,20+p,0,7);g.stroke();}}
+  if(near){g.fillStyle='#ffff55';g.fillRect(near.q.x-28,near.q.y-36,56,26);g.strokeStyle='#000000';g.lineWidth=2;g.strokeRect(near.q.x-28,near.q.y-36,56,26);g.fillStyle='#000000';g.font='bold 18px "VT323", monospace';g.fillText(near.id,near.q.x,near.q.y-17);}
   g.fillStyle='#55ffff';g.fillRect(LX-14,LY-4,28,18);
   if(charging){power=.5-.5*Math.cos((performance.now()-charging)/260);
    const d=Math.hypot(mx-LX,my-LY)||1;g.strokeStyle='#55ffffaa';g.lineWidth=2;g.beginPath();g.moveTo(LX,LY);g.lineTo(LX+(mx-LX)/d*45,LY+(my-LY)/d*45);g.stroke();
