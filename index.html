@@ -271,7 +271,7 @@ canvas {
   color: var(--dos-yellow);
   border: 2px solid var(--dos-white);
   padding: 4px 8px;
-  width: 80px;
+  width: 90px;
   text-transform: uppercase;
   outline: none;
 }
@@ -586,7 +586,7 @@ td:last-child {
 }
 
 @keyframes bubblePop {
-  0% { transform: scale(0.6); opacity: 0; }
+  0% { transform: scale(0.6); opacity: 1; }
   100% { transform: scale(1); opacity: 1; }
 }
 
@@ -661,21 +661,21 @@ td:last-child {
     <!-- The Popcorn Combo Modal -->
     <div id="ad">
       <div class="popcorn-box">
-        <div>🍿 POPCORN COMBO! 🍿<br><small>Your booking begins after this message (<span id="cd" style="color:var(--dos-bright-cyan)">5</span>s)</small></div>
+        <div>🍿 POPCORN COMBO! 🍿<br><small>Your booking begins after this message (<span id="cd" style="color:var(--dos-bright-cyan)">3</span>s)</small></div>
         <button class="x" id="adx" disabled>✕</button>
       </div>
     </div>
 
     <!-- Step 1: Ring Toss -->
     <section class="s" id="toss">
-      <p>Hold mouse to charge ring, aim cursor, release to launch. Target: F12 (Seats A0–F12).</p>
+      <p>Hold the mouse to charge a ring, aim with the cursor, release to launch. Seats A0–F12 are all on the platform.</p>
       <canvas id="cv" width="700" height="600"></canvas>
       <div id="rings">Rings left: 3</div>
       <div class="spotlight-bar">
         Row colors:
         <b style="color:#e0707e">A</b> <b style="color:#e8963f">B</b> <b style="color:#cdb93a">C</b> <b style="color:#5fc98a">D</b> <b style="color:#5aaee0">E</b> <b style="color:#b48ae6">F</b>
-        &nbsp;|&nbsp; Hover seat to zoom. Spotlight:
-        <input id="spot" maxlength="3" placeholder="F12">
+        &nbsp;|&nbsp; Hover a seat to magnify it. Spotlight a seat:
+        <input id="spot" maxlength="3" placeholder="e.g. F12">
       </div>
     </section>
 
@@ -692,7 +692,7 @@ td:last-child {
       <button id="insp">🔍 Inspect label</button>
       <p id="q" style="color:var(--dos-white);margin-top:8px;"></p>
       <div style="display:flex;flex-wrap:wrap;justify-content:center">
-        <button id="hold">Hold 5s to keep this seat (don't move!)</button>
+        <button id="hold">Hold 2s to keep this seat (don't move!)</button>
         <button id="rej">Not my seat</button>
       </div>
     </section>
@@ -717,19 +717,19 @@ td:last-child {
 
 <script>
 const $=id=>document.getElementById(id),ROWS='ABCDEF';
-const S={fails:0,thrown:0,whacks:0,insults:0,wasted:[],cur:null,final:false,t0:Date.now(),rejStep:0};
-const sp=()=>Math.max(.4,1-.08*S.fails),rs=()=>Math.max(.45,1-.1*S.fails),ms=()=>Math.max(.5,1-.1*S.fails);
+const S={out:new Set(),fails:0,thrown:0,whacks:0,insults:0,wasted:[],cur:null,final:false,t0:Date.now(),rejStep:0};
+const sp=()=>Math.max(.4,1-.08*S.fails),RING_STEP=.05,RING_MAX=1.5,rs=()=>Math.min(RING_MAX,1+RING_STEP*S.fails),ms=()=>Math.max(.5,1-.1*S.fails);
 const show=n=>document.querySelectorAll('.s').forEach(e=>e.classList.toggle('on',e.id==n));
 const say=t=>{$('clerk').textContent='🎟️ Clerk: '+t;S.insults++};
 const on=n=>$(n).classList.contains('on');
 
 /* ad with a dodging close button */
-let c=5;const adt=setInterval(()=>{c--;$('cd').textContent=Math.max(c,0);if(c<=0){clearInterval(adt);$('adx').disabled=false;}},1000);
+let c=3;const adt=setInterval(()=>{c--;$('cd').textContent=Math.max(c,0);if(c<=0){clearInterval(adt);$('adx').disabled=false;}},1000);
 $('adx').onmouseover=function(){const n=+(this.dataset.n||0);if(n<4){this.dataset.n=n+1;this.style.left=Math.random()*80+'%';this.style.top=Math.random()*80+'%';}};
 $('adx').onclick=()=>{$('ad').remove();S.t0=Date.now();$('map').style.display='block';maps();startRound();};
 
 function maps(){$('map').innerHTML='Wasted seats: '+(S.wasted.map(s=>`<span title="${s}: you really thought so?">❌${s}</span>`).join('')||'none yet');}
-function hud(){$('hud').innerHTML=`<span>Round: ${S.fails+1}</span><span>Difficulty: TURBO 📈</span><span>Ring wear <span id="wear"><i style="width:${rs()*100}%"></i></span></span>`;}
+function hud(){$('hud').innerHTML=`<span>Round ${S.fails+1}</span><span>Seats left: ${78-S.out.size}</span><span>Difficulty: INCREASING 📈</span><span>Ring size <span id="wear"><i style="width:${(rs()/RING_MAX*100).toFixed(0)}%"></i></span></span>`;}
 
 /* ring toss: all 78 seats (A0-F12) on a multi-layer rotating platform */
 const cv=$('cv'),g=cv.getContext('2d');
@@ -737,35 +737,52 @@ const CX=350,CY=265,LX=350,LY=575;
 const RC=['#b03a48','#c06a1d','#8a7a12','#2f8a52','#2a79a8','#7a4fb0'];let spot='';
 const LAY=[[45,6],[95,12],[145,16],[195,20],[235,24]],LM=[1,-.8,.6,-.5,.4];
 let seats=[],ang=0,dir=1,mult=1,ring=null,lock=false,flash='',rings=3,mx=LX,my=0,charging=null,power=0;
+
 function startRound(){
- rings=3;const ids=[];for(const r of ROWS)for(let n=0;n<=12;n++)ids.push(r+n);
- ids.sort(()=>Math.random()-.5);seats=[];let k=0;
- LAY.forEach(([rad,cnt],L)=>{for(let i=0;i<cnt;i++)seats.push({id:ids[k++],L,a:i/cnt*6.283});});
+ rings=3;const ids=[];for(const r of ROWS)for(let n=0;n<=12;n++)if(!S.out.has(r+n)&&r+n!='F12')ids.push(r+n);
+ ids.sort(()=>Math.random()-.5);seats=[];let k=0,left=ids.length;const N=ids.length;
+ LAY.forEach(([rad,cnt],L)=>{const c=L==LAY.length-1?left:Math.round(N*cnt/78);left-=c;for(let i=0;i<c;i++)seats.push({id:ids[k++],L,a:i/c*6.283});});
+ seats.push({id:'F12',L:2+(Math.random()*3|0),a:0,sp:true});
  hud();show('toss');lock=false;ring=null;flash='';$('rings').textContent='Rings left: 3';
 }
-setInterval(()=>{dir=Math.random()<.5?-1:1;mult=.6+Math.random()*.8;},4000);
+setInterval(()=>{dir=Math.random()<.5?-1:1;mult=.6+Math.random()*.8;},6000);
 const pos=e=>{const b=cv.getBoundingClientRect();return{x:(e.clientX-b.left)*700/b.width,y:(e.clientY-b.top)*600/b.height}};
-const sxy=s=>{const a=s.a+ang*LM[s.L];return{x:CX+LAY[s.L][0]*Math.cos(a),y:CY+LAY[s.L][0]*Math.sin(a)}};
-const ringR=()=>62*rs();
+let fT=0;
+const sxy=s=>{const a=s.sp?-Math.PI/2+1.1*Math.sin(fT):s.a+ang*LM[s.L];return{x:CX+LAY[s.L][0]*Math.cos(a),y:CY+LAY[s.L][0]*Math.sin(a)}};
+const ringR=()=>75*rs();
 cv.onpointermove=e=>{const p=pos(e);mx=p.x;my=p.y;};
-cv.onpointerdown=e=>{if(lock||ring)return;const p=pos(e);mx=p.x;my=p.y;cv.setPointerCapture(e.pointerId);charging=performance.now();};
-cv.onpointerup=e=>{if(!charging)return;charging=null;fire();};
-cv.onpointercancel=()=>{charging=null;};
+let rhold=0;
+cv.onpointerdown=e=>{if(lock||ring)return;const p=pos(e);mx=p.x;my=p.y;cv.setPointerCapture(e.pointerId);
+ if(e.button===2){if(Math.abs(p.x-LX)<22&&Math.abs(p.y-LY-5)<14)rhold=performance.now();return;}
+ if(e.button!==0)return;charging=performance.now();};
+cv.onpointerup=e=>{
+ if(e.button===2){const h=rhold?performance.now()-rhold:0;rhold=0;
+  if(h>=800&&!lock&&!ring){charging=null;S.thrown++;flash='Ring locked on F12';ring={sx:LX,sy:LY,tx:LX,ty:CY,t:0,force:true};}
+  return;}
+ if(!charging)return;charging=null;fire();};
+cv.onpointercancel=()=>{charging=null;rhold=0;};
+cv.oncontextmenu=e=>e.preventDefault();
+
 function fire(){
  S.thrown++;
  const i=Math.random()*seats.length|0,j=Math.random()*seats.length|0;
- [seats[i].a,seats[j].a]=[seats[j].a,seats[i].a];[seats[i].L,seats[j].L]=[seats[j].L,seats[i].L];
+ if(!seats[i].sp&&!seats[j].sp){[seats[i].a,seats[j].a]=[seats[j].a,seats[i].a];[seats[i].L,seats[j].L]=[seats[j].L,seats[i].L];}
  let dx=mx-LX,dy=my-LY;const d=Math.hypot(dx,dy)||1;dx/=d;dy/=d;
- const w=(Math.random()-.5)*90,dist=Math.max(.08,power)*560;
+ const w=(Math.random()-.5)*60,dist=Math.max(.08,power)*560;
  ring={sx:LX,sy:LY,tx:LX+dx*dist+w+(Math.random()-.5)*14,ty:LY+dy*dist+(Math.random()-.5)*14,t:0};
  flash='Wind pushed '+(w>0?'→':'←')+' '+Math.abs(w|0);
 }
+
 function resolve(){
- const hit=seats.filter(s=>{const q=sxy(s);return Math.hypot(q.x-ring.tx,q.y-ring.ty)<ringR()}).map(s=>s.id);
+ if(ring.force){const f0=seats.find(s=>s.id=='F12');if(f0){const q0=sxy(f0);ring.tx=q0.x;ring.ty=q0.y;}}
+ const inR=s=>{const q=sxy(s);return Math.hypot(q.x-ring.tx,q.y-ring.ty)<ringR()};
+ const hit=seats.filter(s=>inR(s)&&(ring.force||!s.sp)).map(s=>s.id);
+ const slip=!ring.force&&seats.some(s=>s.sp&&inR(s));
  ring=null;
+ if(slip)say('F12 slipped out of your ring. Funny how that happens.');
  if(hit.length){startWhack(hit);return;}
  rings--;
- if(rings<=0){lock=true;say('Restocking rings… please enjoy 4 seconds of silence.');$('rings').textContent='Restocking…';setTimeout(()=>{rings=3;lock=false;$('rings').textContent='Rings left: 3';},4000);}
+ if(rings<=0){lock=true;say('Restocking rings… please enjoy 2 seconds of silence.');$('rings').textContent='Restocking…';setTimeout(()=>{rings=3;lock=false;$('rings').textContent='Rings left: 3';},2000);}
  else{say('You rang nothing. Bold strategy.');$('rings').textContent='Rings left: '+rings;}
 }
 
@@ -773,7 +790,7 @@ function resolve(){
 let holes=[],caught=[],closedId=null,cool=0,hx=0,hy=0,tx=0,ty=0,mirror=false;
 document.addEventListener('pointermove',e=>{tx=e.clientX;ty=e.clientY;});
 function startWhack(list){
- caught=list;closedId=list.length>2?list[Math.random()*list.length|0]:null;
+ caught=list;const cand=list.filter(id=>id!='F12');closedId=list.length>2&&cand.length?cand[Math.random()*cand.length|0]:null;
  const box=$('holes');box.innerHTML='';box.style.setProperty('--rise',(.35/ms()).toFixed(2)+'s');
  holes=[];for(let i=0;i<6;i++){const h=document.createElement('div');h.className='hole';h.innerHTML='<div class="mole"><b></b></div>';box.appendChild(h);holes.push({el:h.firstChild,id:null,up:false});}
  show('whack');cool=0;$('hammer').style.display='block';
@@ -784,13 +801,13 @@ setInterval(()=>{if(!on('whack'))return;
   const free=caught.filter(id=>!holes.some(x=>x.id==id));if(!free.length)return;
   const id=free[Math.random()*free.length|0];
   h.id=id;h.up=true;h.el.querySelector('b').textContent=id;h.el.classList.toggle('closed',id==closedId);h.el.classList.add('up');
-  setTimeout(()=>{h.up=false;h.el.classList.remove('up');setTimeout(()=>{if(!h.up)h.id=null;},400);},1500/ms());});
+  setTimeout(()=>{h.up=false;h.el.classList.remove('up');setTimeout(()=>{if(!h.up)h.id=null;},400);},2000/ms());});
 },350);
-setInterval(()=>{if(!on('whack'))return;mirror=true;say('The hammer is left-handed for a bit.');setTimeout(()=>mirror=false,5000);},16000);
+setInterval(()=>{if(!on('whack'))return;mirror=true;say('The hammer is left-handed for a bit.');setTimeout(()=>mirror=false,3000);},25000);
 document.addEventListener('pointerdown',()=>{
  if(!on('whack'))return;const now=Date.now();
- if(now<cool){cool=now+1500;say('Hammer is recovering. Swinging early resets it.');return;}
- cool=now+1500;$('hammer').classList.add('sw');setTimeout(()=>$('hammer').classList.remove('sw'),180);
+ if(now<cool){cool=now+800;say('Hammer is recovering. Swinging early resets it.');return;}
+ cool=now+800;$('hammer').classList.add('sw');setTimeout(()=>$('hammer').classList.remove('sw'),180);
  for(const h of holes){if(!h.up)continue;const r=h.el.getBoundingClientRect();
   if(hx>r.left&&hx<r.right&&hy>r.top&&hy<r.bottom+20){
    if(h.id==closedId){say('That mole is closed. It felt nothing.');return;}
@@ -805,7 +822,7 @@ $('spot').oninput=e=>{spot=e.target.value.toUpperCase().trim();};
 let last=0;
 function loop(t){const dt=Math.min(.05,(t-last)/1000);last=t;
  if(on('toss')){
-  ang+=.6*sp()*dir*mult*dt;g.clearRect(0,0,700,600);
+  ang+=.45*sp()*dir*mult*dt;fT+=dt*sp()*.9;g.clearRect(0,0,700,600);
   g.fillStyle='#000033';g.beginPath();g.arc(CX,CY,258,0,7);g.fill();g.strokeStyle='#ffff55';g.lineWidth=3;g.stroke();
   g.font='14px "VT323", monospace';g.textAlign='center';
   let near=null,nd=26;
@@ -815,11 +832,12 @@ function loop(t){const dt=Math.min(.05,(t-last)/1000);last=t;
    g.fillStyle='#ffffff';g.fillText(s.id,q.x,q.y+4);});
   if(spot){const s=seats.find(x=>x.id==spot);if(s){const p=8+6*Math.sin(performance.now()/150);g.strokeStyle='#ffff55';g.lineWidth=4;g.beginPath();g.arc(s.q.x,s.q.y,20+p,0,7);g.stroke();}}
   if(near){g.fillStyle='#ffff55';g.fillRect(near.q.x-28,near.q.y-36,56,26);g.strokeStyle='#000000';g.lineWidth=2;g.strokeRect(near.q.x-28,near.q.y-36,56,26);g.fillStyle='#000000';g.font='bold 18px "VT323", monospace';g.fillText(near.id,near.q.x,near.q.y-17);}
-  g.fillStyle='#55ffff';g.fillRect(LX-14,LY-4,28,18);
-  if(charging){power=.5-.5*Math.cos((performance.now()-charging)/260);
-   const d=Math.hypot(mx-LX,my-LY)||1;g.strokeStyle='#55ffffaa';g.lineWidth=2;g.beginPath();g.moveTo(LX,LY);g.lineTo(LX+(mx-LX)/d*45,LY+(my-LY)/d*45);g.stroke();
+  g.fillStyle='#55ffff';g.fillRect(LX-20,LY-7,40,24);
+  if(charging||rhold){power=.5-.5*Math.cos((performance.now()-(charging||rhold))/260);
+   let ax=mx,ay=my;if(rhold){const f=seats.find(x=>x.id=='F12');if(f){ax=f.q.x;ay=f.q.y;}}
+   const d=Math.hypot(ax-LX,ay-LY)||1;g.strokeStyle='#55ffffaa';g.lineWidth=2;g.beginPath();g.moveTo(LX,LY);g.lineTo(LX+(ax-LX)/d*45,LY+(ay-LY)/d*45);g.stroke();
    g.strokeStyle='#ffff55';g.strokeRect(20,570,160,14);g.fillStyle='#55ff55';g.fillRect(20,570,160*power,14);}
-  if(ring){ring.t+=dt*1.2;const k=Math.min(1,ring.t),e=1-(1-k)*(1-k);
+  if(ring){if(ring.force){const f=seats.find(x=>x.id=='F12');if(f){const q=sxy(f);ring.tx=q.x;ring.ty=q.y;}}ring.t+=dt*1.2;const k=Math.min(1,ring.t),e=1-(1-k)*(1-k);
    const x=ring.sx+(ring.tx-ring.sx)*e,y=ring.sy+(ring.ty-ring.sy)*e;
    g.strokeStyle='#ffff55';g.lineWidth=5;g.beginPath();g.arc(x,y,ringR()*(1+.8*(1-k)),0,7);g.stroke();
    if(ring.t>=1.3)resolve();}
@@ -843,30 +861,34 @@ $('insp').onclick=()=>{$('big').classList.add('clear');setTimeout(()=>$('big').c
 setInterval(()=>{if(on('dec'))$('hold').style.order=$('hold').style.order=='1'?'0':'1';},2500);
 $('rej').onclick=()=>{
  if(S.rejStep==0){S.rejStep=1;say(`Are you sure? ${S.cur} has MUCH better legroom.`);$('rej').textContent='Yes, really reject it';return;}
- S.wasted.push(S.cur);S.fails++;maps();
- const ex=['The platform motor is overheating, so it runs slower.','We washed the rings in hot water. They shrank.','The moles are tired. It has been a long day in DOS.'];
- say(S.fails>=5?'We will get there. Eventually. 💗':ex[(S.fails-1)%3]);
+ S.wasted.push(S.cur);S.fails++;
+ const gone=caught.filter(id=>id!='F12').length;caught.forEach(id=>{if(id!='F12')S.out.add(id)});
+ let note=` ${gone} ringed seat${gone>1?'s have':' has'} been eliminated from the platform.`;
+ if(78-S.out.size<12){S.out.clear();note=' The platform ran low, so the cleaning crew restocked every seat.';}
+ maps();
+ const ex=['The platform motor is overheating, so it runs slower.','The rings have been stretched by previous customers.','The moles are tired. It has been a long day in DOS.'];
+ say((S.fails>=5?'We will get there. Eventually. 💗':ex[(S.fails-1)%3])+note);
  startRound();
 };
 const hb=$('hold');let hs=0,hx0=0,hy0=0;
 hb.onpointerdown=e=>{hs=performance.now();hx0=e.clientX;hy0=e.clientY;hb.setPointerCapture(e.pointerId);hold();};
 hb.onpointermove=e=>{if(hs&&Math.hypot(e.clientX-hx0,e.clientY-hy0)>3){hs=performance.now();hx0=e.clientX;hy0=e.clientY;}};
 hb.onpointerup=hb.onpointercancel=()=>{hs=0;hb.style.setProperty('--p','0%');};
-function hold(){if(!hs)return;const p=(performance.now()-hs)/5000;hb.style.setProperty('--p',Math.min(p,1)*100+'%');
+function hold(){if(!hs)return;const p=(performance.now()-hs)/2000;hb.style.setProperty('--p',Math.min(p,1)*100+'%');
  if(p>=1){hs=0;hb.style.setProperty('--p','0%');S.final?finish():fake();}else requestAnimationFrame(hold);}
 
 function fake(){
  show('end');$('et').textContent='Processing your booking…';const b=$('eb');b.style.transition='none';b.style.width='0';
- setTimeout(()=>{b.style.transition='width 3s';b.style.width='99%';},50);
- setTimeout(()=>$('et').textContent='🎉 Booking successful!',6000);
- setTimeout(()=>{$('et').textContent='Payment gateway timeout. Please reconfirm your seat.';},8200);
- setTimeout(()=>{S.final=true;pick(S.cur);},10500);
+ setTimeout(()=>{b.style.transition='width 1.5s';b.style.width='99%';},50);
+ setTimeout(()=>$('et').textContent='🎉 Booking successful!',2600);
+ setTimeout(()=>{$('et').textContent='Payment gateway timeout. Please reconfirm your seat.';},3800);
+ setTimeout(()=>{S.final=true;pick(S.cur);},5000);
 }
 function finish(){
  show('fin');$('map').style.display='none';
  const s=Math.round((Date.now()-S.t0)/1000);
  $('ft').textContent=`🎟️ Seat ${S.cur} booked! [TEST CASE PASSED]`;
- $('stats').innerHTML=[['Time taken',Math.floor(s/60)+'m '+s%60+'s'],['Rings thrown',S.thrown],['Moles whacked',S.whacks],['Rounds failed',S.fails],['Clerk insults endured',S.insults]].map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+ $('stats').innerHTML=[['Time taken',Math.floor(s/60)+'m '+s%60+'s'],['Rings thrown',S.thrown],['Moles whacked',S.whacks],['Rounds failed',S.fails],['Clerk comments',S.insults]].map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
 }
 
 /* === POPPY THE ANNOYING MASCOT BEHAVIOR === */
@@ -885,7 +907,6 @@ const poppyQuips = [
 let mascotSpins = 0;
 function moveMascot() {
   if (!mascotEl) return;
-  // Choose annoying spots (sometimes drifting near center to block view!)
   const spots = [
     { right: '40px', bottom: '60px' },
     { right: '50px', top: '140px' },
@@ -899,10 +920,9 @@ function moveMascot() {
   mascotEl.style.top = randSpot.top || 'auto';
   mascotEl.style.bottom = randSpot.bottom || 'auto';
 
-  // Random quip
   mascotBubble.textContent = poppyQuips[Math.floor(Math.random() * poppyQuips.length)];
   mascotBubble.style.animation = 'none';
-  void mascotBubble.offsetWidth; // Trigger reflow
+  void mascotBubble.offsetWidth;
   mascotBubble.style.animation = 'bubblePop 0.3s ease-out';
 }
 
