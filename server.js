@@ -2,7 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const PORT = process.env.PORT || 3000;
+let PORT = parseInt(process.env.PORT, 10) || 3000;
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css',
@@ -31,6 +31,23 @@ const server = http.createServer((req, res) => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`CineChaos local server running at http://localhost:${PORT}/`);
+function startServer(port) {
+  server.listen(port, () => {
+    console.log(`\n=========================================`);
+    console.log(`🎬 CineChaos Box Office is live!`);
+    console.log(`👉 Access URL: http://localhost:${port}/`);
+    console.log(`=========================================\n`);
+  });
+}
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.warn(`Port ${PORT} in use, trying port ${PORT + 1}...`);
+    PORT++;
+    startServer(PORT);
+  } else {
+    console.error('Server error:', err);
+  }
 });
+
+startServer(PORT);

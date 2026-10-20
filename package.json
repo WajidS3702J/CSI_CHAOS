@@ -1,0 +1,13 @@
+{
+  "name": "csi-chaos",
+  "version": "1.0.0",
+  "description": "CineChaos Box Office - evil cinema seat selection challenge",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
